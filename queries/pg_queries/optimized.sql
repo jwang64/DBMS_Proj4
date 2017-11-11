@@ -5,21 +5,25 @@ set "variables.v4" = 'crsCode389452';
 set "variables.v5" = 'name119557'; -- name of professor
 set "variables.v6" = 'deptId785607';
 set "variables.v7" = 'deptId145704';
-set "variables.v8" = 'deptId785607'; -- todo: use better deptid
 
+-- IMPORTANT!!! make sure @v8 matches in the where clause
+set "variables.v8" = 'deptId785607';
+CREATE VIEW DEPT_COURSES AS (
+	SELECT crsCode
+	FROM course
+	WHERE deptId = 'deptId345678'
+);
 
 -- List the name of the student with id equal to v1 (id). --
 SELECT name
 FROM Student
 WHERE id = cast(current_setting('variables.v1') as integer);
--- 3.3ms --
 
 -- List the names of students with id in the range of v2 (id) to v3 (inclusive). --
 SELECT name
 FROM Student
 WHERE id >= cast(current_setting('variables.v2') as integer)
 	AND id <= @cast(current_setting('variables.v3') as integer);
--- 3ms --
 
 -- List the names of students who have taken course v4 (crsCode). --
 
@@ -29,42 +33,26 @@ WHERE student.id = transcript.studId
 	AND transcript.crsCode = cast(current_setting('variables.v4') as text)
 ;
 
-SELECT name 
-FROM Student
-JOIN Transcript 
-WHERE crsCode IN (SELECT crsCode 
-				  FROM transcript 
-				  WHERE crsCode=cast(current_setting('variables.v4') as text));
--- .8ms --
-
 -- List the names of students who have taken a course taught by professor v5 (name). -
-SELECT s.name
-FROM Student as s
-	JOIN Transcript as Trans
-		ON Trans.studId = s.id 
-	JOIN Teaching as Te
-		ON Te.crsCode = Trans.crsCode AND Te.semester = Trans.semester
-	JOIN Professor as p
-		ON p.id = Te.profId
-WHERE p.name = cast(current_setting('variables.v5') as text);
--- 9.7ms --
+SELECT DISTINCT(s.name)
+FROM student as s, professor as p, teaching as t, transcript as ts
+WHERE s.id = ts.studId
+	AND ts.crsCode = t.crsCode
+	AND t.profId = p.id
+	AND p.name = cast(current_setting('variables.v5') as text)
+;
 
 -- List the names of students who have taken a course from department v6 (deptId), but not v7. --
 SELECT Student.name
 FROM Student, Transcript, Course
 WHERE Transcript.crsCode= Course.crsCode AND Student.id = Transcript.studID
-AND Course.deptId = cast(current_setting('variables.v6') as text) and Course.deptId <> cast(current_setting('variables.v7') as text);
--- .8ms --
+	AND Course.deptId = cast(current_setting('variables.v6') as text)
+	AND Course.deptId <> cast(current_setting('variables.v7') as text);
 
 -- List the names of students who have taken all courses offered by department v8 (deptId). --
 
 SELECT DISTINCT(s.name)
 FROM student as s, transcript as ts, course as c
 WHERE s.id = ts.studId
-	AND ts.crsCode = ALL (
-		SELECT crsCode
-		FROM course
-		WHERE course.deptId = cast(current_setting('variables.v8') as text)
-	)
+	AND ts.crsCode = ALL (SELECT * FROM DEPT_COURSES)
 ;
--- 5.2ms --			

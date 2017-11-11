@@ -5,59 +5,55 @@ SET @v4 = 'crsCode123456';
 SET @v5 = 'name10743';
 SET @v6 = 'deptId123456';
 SET @v7 = 'deptId234567';
+
+
 SET @v8 = 'deptId345678';
+-- IMPORTANT!!! make sure @v8 matches in the where clause
+CREATE VIEW DEPT_COURSES AS (
+	SELECT crsCode
+	FROM course
+	WHERE deptId = 'deptId345678'
+);
 
 -- List the name of the student with id equal to v1 (id). --
 SELECT name
-FROM Student
+FROM student
 WHERE id = @v1;
--- 3.3ms --
 
 -- List the names of students with id in the range of v2 (id) to v3 (inclusive). --
 SELECT name
-FROM Student
+FROM student
 WHERE id >= @v2 AND id <= @v3;
--- 3ms --
 
 -- List the names of students who have taken course v4 (crsCode). --
-SELECT name 
-FROM Student 
-JOIN transcript 
-WHERE crsCode IN (SELECT crsCode 
-				  FROM transcript 
-				  WHERE crsCode=@v3);
--- .8ms --
+
+SELECT DISTINCT(student.name)
+FROM student, transcript
+WHERE student.id = transcript.studId
+	AND transcript.crsCode = @v4
+;
 
 -- List the names of students who have taken a course taught by professor v5 (name). -
-SELECT s.name
-FROM Student as s
-	JOIN Transcript as Trans
-		ON Trans.studId = s.id 
-	JOIN Teaching as Te
-		ON Te.crsCode = Trans.crsCode AND Te.semester = Trans.semester
-	JOIN Professor as p
-		ON p.id = Te.profId
-WHERE p.name = @v5;
--- 9.7ms --
+SELECT DISTINCT(s.name)
+FROM student as s, professor as p, teaching as t, transcript as ts
+WHERE s.id = ts.studId
+	AND ts.crsCode = t.crsCode
+	AND t.profId = p.id
+	AND p.name = @v5
+;
 
 -- List the names of students who have taken a course from department v6 (deptId), but not v7. --
-SELECT Student.name
-FROM Student, Transcript, Course
-WHERE Transcript.crsCode= Course.crsCode AND Student.id = Transcript.studID
-AND Course.deptId = @v6 and Course.deptId <> @v7;
--- .8ms --
+SELECT DISTINCT(s.name)
+FROM student as s, transcript as ts, course as c
+WHERE s.id = ts.studId
+	AND ts.crsCode = c.crsCode
+	AND c.deptId = @v6
+	AND c.deptId <> @v7
+;
 
 -- List the names of students who have taken all courses offered by department v8 (deptId). --
-SELECT s.name 
-FROM Student as s
-JOIN Transcript as Trans
-	ON s.id = Trans.studId
-		WHERE crsCode IN
-		(SELECT crsCode FROM Course 
-		 WHERE deptId = @v8 AND crsCode 
-		 IN (SELECT crsCode 
-		     FROM Teaching))
-		GROUP BY studId
-		HAVING COUNT(*) = 
-			(SELECT COUNT(*) FROM Course WHERE deptId = @v8 AND crsCode IN (SELECT crsCode FROM Teaching));
--- 5.2ms --			
+SELECT DISTINCT(s.name)
+FROM student as s, transcript as ts
+WHERE s.id = ts.studId
+	AND ts.crsCode = ALL (SELECT * FROM DEPT_COURSES)
+;

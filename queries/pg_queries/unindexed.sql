@@ -70,10 +70,10 @@ WHERE s.id = ts.studId
 	AND ts.crsCode = c.crsCode
 	AND c.deptId = cast(current_setting('variables.v6') as text)
 	AND c.deptId <> cast(current_setting('variables.v7') as text)
-	-- returns
+;
+-- should returns
 	--  name72596
 	--  name591558
-;
 
 -- 6) List the names of students who have taken all courses offered by department v8 (deptId).
 

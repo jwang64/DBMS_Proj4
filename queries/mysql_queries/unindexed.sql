@@ -79,11 +79,7 @@ WHERE s.id = ts.studId
 SELECT DISTINCT(s.name)
 FROM student as s, transcript as ts, course as c
 WHERE s.id = ts.studId
-	AND ts.crsCode = ALL (
-		SELECT crsCode
-		FROM course
-		WHERE course.deptId = @v8
-	)
+	AND ts.crsCode = ALL (SELECT crsCode FROM course WHERE course.deptId = @v8)
 ;
 
 
