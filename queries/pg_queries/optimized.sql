@@ -17,13 +17,21 @@ WHERE id = cast(current_setting('variables.v1') as integer);
 -- List the names of students with id in the range of v2 (id) to v3 (inclusive). --
 SELECT name
 FROM Student
-WHERE id >= cast(current_setting('variables.v2') as integer) AND id <= @cast(current_setting('variables.v3') as integer);
+WHERE id >= cast(current_setting('variables.v2') as integer)
+	AND id <= @cast(current_setting('variables.v3') as integer);
 -- 3ms --
 
 -- List the names of students who have taken course v4 (crsCode). --
+
+SELECT DISTINCT(student.name)
+FROM student, transcript
+WHERE student.id = transcript.studId
+	AND transcript.crsCode = cast(current_setting('variables.v4') as text)
+;
+
 SELECT name 
-FROM Student 
-JOIN transcript 
+FROM Student
+JOIN Transcript 
 WHERE crsCode IN (SELECT crsCode 
 				  FROM transcript 
 				  WHERE crsCode=cast(current_setting('variables.v4') as text));
@@ -49,16 +57,14 @@ AND Course.deptId = cast(current_setting('variables.v6') as text) and Course.dep
 -- .8ms --
 
 -- List the names of students who have taken all courses offered by department v8 (deptId). --
-SELECT s.name 
-FROM Student as s
-JOIN Transcript as Trans
-	ON s.id = Trans.studId
-		WHERE crsCode IN
-		(SELECT crsCode FROM Course 
-		 WHERE deptId = cast(current_setting('variables.v8') as text) AND crsCode 
-		 IN (SELECT crsCode 
-		     FROM Teaching))
-		GROUP BY studId
-		HAVING COUNT(*) = 
-			(SELECT COUNT(*) FROM Course WHERE deptId = cast(current_setting('variables.v8') as text) AND crsCode IN (SELECT crsCode FROM Teaching));
+
+SELECT DISTINCT(s.name)
+FROM student as s, transcript as ts, course as c
+WHERE s.id = ts.studId
+	AND ts.crsCode = ALL (
+		SELECT crsCode
+		FROM course
+		WHERE course.deptId = cast(current_setting('variables.v8') as text)
+	)
+;
 -- 5.2ms --			
