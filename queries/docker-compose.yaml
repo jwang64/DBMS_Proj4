@@ -9,8 +9,8 @@ services:
     ports:
       - '3306:3306'
     volumes:
-      - ./mysql_queries/unindexed.sql:/root/mysql_queries/unindexed.sql
-      - ./mysql_queries/indexed.sql:/root/mysql_queries/indexed.sql
+      - ./mysql_queries/optimized.sql:/root/mysql_queries/optimized.sql
+      - ./mysql_queries/original.sql:/root/mysql_queries/original.sql
       - ./mysql_init.sql:/docker-entrypoint-initdb.d/schema.sql
     environment:
       MYSQL_ROOT_PASSWORD: 'password'
@@ -20,8 +20,8 @@ services:
     image: postgres:alpine
     restart: always
     volumes:
-      - ./pg_queries/unindexed.sql:/root/pg_queries/unindexed.sql
-      - ./pg_queries/indexed.sql:/root/pg_queries/indexed.sql
+      - ./pg_queries/optimized.sql:/root/pg_queries/optimized.sql
+      - ./pg_queries/original.sql:/root/pg_queries/original.sql
       - ./pg_init.sql:/docker-entrypoint-initdb.d/schema.sql
     environment:
       POSTGRES_PASSWORD: 'password'
