@@ -1,0 +1,9 @@
+CSCI4370 Project 2 Repoet - Peter Choi
+
+For this project, I helped implement the PostgreSql and MySql queries. Before the queries were
+optimized, it took the database a lot longer time to execute the queries. After indexing and, optimizing 
+the queries, the speed of exection was greatly reduced for some queries. A difficult
+part of the project was learning how to connect java to postgresql to fill our tables.
+I would have liked more detailed instructions on what to do, and maybe some reference
+times, so we could know if we were on the right track. Overall, I think the project would
+have been much more doable, if we didn't have an exam on the same week it was due. 
