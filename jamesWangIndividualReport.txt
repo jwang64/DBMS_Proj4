@@ -1,0 +1,9 @@
+CSCI 4370 Project 4 Report - James Wang
+
+I added the SQL connector
+I added the MySQL optimized
+I made the plots
+
+We managed to finish everything.
+
+The set up took a while, but we managed to finish everything :)
