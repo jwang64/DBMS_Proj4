@@ -15,11 +15,9 @@ public class MySQLConnector
 	private static PreparedStatement statement;
 	
 	
-	private static Table[] createTables(int numberOfTables)
+	private static void createTables()
 	{
-		// code from the TestTupleGenerator
-		 TupleGenerator test = new TupleGeneratorImpl ();
-
+		TupleGenerator test = new TupleGeneratorImpl ();
         test.addRelSchema ("Student",
                            "id name address status",
                            "Integer String String String",
@@ -52,28 +50,10 @@ public class MySQLConnector
                            new String [][] {{ "studId", "Student", "id"},
                                             { "crsCode", "Course", "crsCode" },
                                             { "crsCode semester", "Teaching", "crsCode semester" }});
-
-        String [] tables = { "Student", "Professor", "Course", "Teaching", "Transcript" };
-		int tups [] = new int [] { numberOfTables, numberOfTables , numberOfTables, numberOfTables , numberOfTables };
-		Comparable [][][] resultTest = test.generate (tups);
-		Table professor = new Table("Professor", "id name deptId", "Integer String String", "id");
-		Table courses = new Table("Course", "crsCode deptId crsName descr", "String String String String", "crsCode");
-		Table student = new Table("Student", "id name address status", "Integer String String String", "id");
-		for(Comparable[] tuple : resultTest[1])
-		{
-			professor.insert(tuple);
-		}
-		for(Comparable[] tuple : resultTest[2])
-		{
-			courses.insert(tuple);
-		}
-    for(Comparable[] tuple : resultTest[3])
-    {
-      student.insert(tuple);
-    }
-		
-		Table tableList[] = {professor, courses, student};
-		return tableList;
+        
+        int tups [] = new int [] { 10000, 10000, 10000, 10000, 1000 };
+        
+        data = test.generate(tups);
 	}
 	
 	private static void createConnection()
@@ -110,7 +90,8 @@ public class MySQLConnector
 	
 	private static void createAndPopulateStudentTables() throws SQLException
 	{
-		connection.prepareStatement("student ("
+		System.out.println("Student Table being created");
+		connection.prepareStatement("CREATE TABLE IF NOT EXISTS student ("
 				+ "id integer PRIMARY KEY,"
 				+ "name varchar(64),"
 				+ "address varchar(128),"
@@ -121,11 +102,10 @@ public class MySQLConnector
 		String studentName;
 		String studentAddress;
 		String studentStatus;
-		
 		for(int i = 0 ; i< sTable.length; i++)
 		{
-			statement = connection.prepareStatement("Insert (id, name, address, status) " + "(?,?,?,?);");
-			
+			statement = connection.prepareStatement("INSERT INTO student (id, name, address, status) "
+					+ "VALUES (?, ?, ?, ?);");
 			Comparable[] studentTuple;
 			studentTuple = sTable[i];
 			studentId = (int) studentTuple[0];
@@ -140,14 +120,17 @@ public class MySQLConnector
 			statement.executeUpdate();
 			
 		}
-	}
+		System.out.println("Student Table finished");
+		}
 	
+
 	private static void createAndPopulateProfessorTables() throws SQLException
 	{
-		connection.prepareStatement("professor ("
+		System.out.println("Professor Table being created");
+		connection.prepareStatement("CREATE TABLE IF NOT EXISTS professor ("
 				+ "id integer PRIMARY KEY,"
 				+ "name varchar(64),"
-				+ "deptId varchar(128),"
+				+ "deptId varchar(16)"
 				+ ");").execute();
 		Comparable[][] pTable = data[PROFESSOR_TABLE];
 		int professorId;
@@ -156,8 +139,8 @@ public class MySQLConnector
 		
 		for(int i = 0 ; i< pTable.length; i++)
 		{
-			statement = connection.prepareStatement("Insert (id, name, dept_id) " + "(?,?,?);");
-			
+			statement = connection.prepareStatement("INSERT INTO professor (id, name, deptId) "
+					+ "VALUES (?, ?, ?);");
 			Comparable[] professorTuple;
 			professorTuple = pTable[i];
 			professorId = (int) professorTuple[0];
@@ -170,11 +153,13 @@ public class MySQLConnector
 			statement.executeUpdate();
 			
 		}
+		System.out.println("Professor Table Finished");
 	}
 	
 	private static void createAndPopulateCourseTables() throws SQLException
 	{
-		connection.prepareStatement("course ("
+		System.out.println("Course Table being created");
+		connection.prepareStatement("CREATE TABLE IF NOT EXISTS course ("
 				+ "crsCode varchar(64) PRIMARY KEY,"
 				+ "deptId varchar(128),"
 				+ "crsName varchar(128),"
@@ -188,7 +173,8 @@ public class MySQLConnector
 		
 		for(int i = 0 ; i< cTable.length; i++)
 		{
-			statement = connection.prepareStatement("Insert (crsCode, deptId, crsName, descr) " + "(?,?,?,?);");
+			statement = connection.prepareStatement("INSERT INTO course (crsCode, deptId, crsName, descr) "
+					+ "VALUES (?, ?, ?, ?);");
 			
 			Comparable[] courseTuple;
 			courseTuple = cTable[i];
@@ -204,17 +190,19 @@ public class MySQLConnector
 			statement.executeUpdate();
 			
 		}
+		System.out.println("Course Table Finished");
 	}
 	
 	private static void createAndPopulateTeachingTables() throws SQLException
 	{
-		connection.prepareStatement("Teaching ("
-				+ "crsCode varchar(64) PRIMARY KEY,"
-				+ "semester varchar(64),"
+		System.out.println("Teaching Table being created");
+		connection.prepareStatement("CREATE TABLE IF NOT EXISTS teaching ("
+				+ "crsCode varchar(16),"
+				+ "semester varchar(16),"
 				+ "profId integer,"
 				+ "CONSTRAINT crsId PRIMARY KEY (crsCode,semester),"
-				+ "CONSTRAINT crs FOREIGN KEY (crsCode) REFERENCES Course (crsCode)"	
 				+ "CONSTRAINT prof FOREIGN KEY (profId) REFERENCES Professor (id),"
+				+ "CONSTRAINT crs FOREIGN KEY (crsCode) REFERENCES Course (crsCode)"
 				+ ");").execute();
 		Comparable[][] tTable = data[TEACHING_TABLE];
 		String crsCode;
@@ -224,8 +212,9 @@ public class MySQLConnector
 		
 		for(int i = 0 ; i< tTable.length; i++)
 		{
-			statement = connection.prepareStatement("Insert (crsCode, semester, profId) " + "(?,?,?);");
-			
+			statement = connection.prepareStatement("INSERT INTO teaching (crsCode, semester, profId) "
+					+ "VALUES (?, ?, ?);");
+
 			Comparable[] teachingTuple;
 			teachingTuple = tTable[i];
 			crsCode = (String) teachingTuple[0];
@@ -238,19 +227,21 @@ public class MySQLConnector
 			statement.executeUpdate();
 			
 		}
+		System.out.println("Teaching Table Finished");
 	}
 	
 	private static void createAndPopulateTranscriptTables() throws SQLException
 	{
-		connection.prepareStatement("Transcript ("
+		System.out.println("Transcript Table being created");
+		connection.prepareStatement("CREATE TABLE IF NOT EXISTS transcript ("
 				+ "studId integer,"
-				+ "crsCode varchar(64),"
-				+ "semester varchar(64),"
+				+ "crsCode varchar(16),"
+				+ "semester varchar(16),"
 				+ "grade varchar(16),"
 				+ "CONSTRAINT trs_grad PRIMARY KEY (studId,crsCode,semester),"
+				+ "CONSTRAINT trs_stud FOREIGN KEY (studId) REFERENCES Student (id),"
 				+ "CONSTRAINT trs_crs FOREIGN KEY (crsCode) REFERENCES Course (crsCode),"
 				+ "CONSTRAINT trs_section FOREIGN KEY (crsCode,semester) REFERENCES Teaching (crsCode,semester)"
-				+ "CONSTRAINT trs_stud FOREIGN KEY (studId) REFERENCES Student (id),"	
 				+ ");").execute();
 		Comparable[][] tTable = data[TRANSCRIPT_TABLE];
 		int studId;
@@ -260,7 +251,8 @@ public class MySQLConnector
 		
 		for(int i = 0 ; i< tTable.length; i++)
 		{
-			statement = connection.prepareStatement("Insert (studId, crsCode, semester, grade) " + "(?,?,?,?);");		
+			statement = connection.prepareStatement("INSERT INTO transcript (studId, crsCode, semester, grade) "
+					+ "VALUES (?, ?, ?, ?);");	
 			Comparable[] transcriptTuple;
 			transcriptTuple = tTable[i];
 			studId = (int) transcriptTuple[0];
@@ -275,14 +267,25 @@ public class MySQLConnector
 			statement.executeUpdate();
 			
 		}
+		System.out.println("Transcript Table Finished");
 	}	
+
+	private static void clearTables() throws SQLException
+	{
+		System.out.println("Clearing tables...");
+		connection.prepareStatement("DELETE FROM transcript ").executeUpdate();
+		connection.prepareStatement("DELETE FROM teaching ").executeUpdate();
+		connection.prepareStatement("DELETE FROM course ").executeUpdate();
+		connection.prepareStatement("DELETE FROM professor ").executeUpdate();
+		connection.prepareStatement("DELETE FROM student ").executeUpdate();
+	}
 	
 	public static void main(String[] args)
 	{
 		createConnection();
 		if(connection != null) 
 		{
-			createTables(10000);
+			createTables();
 			
 			try
 			{
