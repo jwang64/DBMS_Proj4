@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql/mysql-server:5.7
+    restart: always
+    expose:
+      - '3306'
+    ports:
+      - '3306:3306'
+    volumes:
+      - ./mysql_queries/unindexed.sql:/root/mysql_queries/unindexed.sql
+      - ./mysql_queries/indexed.sql:/root/mysql_queries/indexed.sql
+      - ./mysql_init.sql:/docker-entrypoint-initdb.d/schema.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: 'password'
+      MYSQL_DATABASE: 'project4'
+      MYSQL_ROOT_HOST: '192.168.0.48/255.255.255.248'
+  pg:
+    image: postgres:alpine
+    restart: always
+    volumes:
+      - ./pg_queries/unindexed.sql:/root/pg_queries/unindexed.sql
+      - ./pg_queries/indexed.sql:/root/pg_queries/indexed.sql
+      - ./pg_init.sql:/docker-entrypoint-initdb.d/schema.sql
+    environment:
+      POSTGRES_PASSWORD: 'password'
+      POSTGRES_DB: 'project4'
+    ports:
+      - 8080:8080
